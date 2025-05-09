@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redis
+    environment:
+      - GIN_MODE=release # Gin 框架用于控制运行模式的环境变量配置，它直接影响框架的行为和性能优化,影响日志输出
+  redis:
+    image: redis:alpine
+    ports:
+      - "7354:7354"
+    command: ["redis-server", "--port", "7354"]
