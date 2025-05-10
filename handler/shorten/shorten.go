@@ -1,10 +1,10 @@
-package shortLink
+package shorten
 
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"short_link_generation/services"
-	"short_link_generation/storage"
+	"shortenLink/services"
+	"shortenLink/storage"
 )
 
 // ShortLinkHandler 处理短链接请求,POST请求

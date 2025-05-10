@@ -38,11 +38,12 @@ func (m *MemoryStore) IncrementVisit(code string) {
 	}
 	m.VisitCount[code]++*/
 	//原子操作更新计数器
-	record, loaded := m.Visits.LoadOrStore(code, &VisitRecord{})
-	if !loaded {
-		record = &VisitRecord{}
-		m.Visits.Store(code, record)
+	record, _ := m.Visits.LoadOrStore(code, &VisitRecord{})
+	//安全类型断言
+	vRecord, ok := record.(*VisitRecord)
+	if !ok {
+		panic("unexpected type in visits map")
 	}
-	atomic.AddInt64(&record.(*VisitRecord).Count, 1)
-	atomic.StoreInt64(&record.(*VisitRecord).LastVisit, time.Now().UnixNano())
+	atomic.AddInt64(&vRecord.Count, 1)
+	atomic.StoreInt64(&vRecord.LastVisit, time.Now().UnixNano())
 }

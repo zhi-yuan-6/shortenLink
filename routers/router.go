@@ -2,12 +2,12 @@ package routers
 
 import (
 	"github.com/gin-gonic/gin"
-	"short_link_generation/controllers/health"
-	"short_link_generation/controllers/redirect"
-	"short_link_generation/controllers/shortLink"
-	"short_link_generation/controllers/stats"
-	"short_link_generation/middleware"
-	"short_link_generation/storage"
+	"shortenLink/handler/health"
+	"shortenLink/handler/redirect"
+	"shortenLink/handler/shorten"
+	"shortenLink/handler/stats"
+	"shortenLink/middleware"
+	"shortenLink/storage"
 )
 
 func SetupRouters(r *gin.Engine, store *storage.MemoryStore) {
@@ -17,7 +17,7 @@ func SetupRouters(r *gin.Engine, store *storage.MemoryStore) {
 	api := r.Group("/api")
 	{
 		api.GET("/health", health.HealthHandler)
-		api.POST("/shorten", shortLink.ShortenHandler(store))
+		api.POST("/shorten", shorten.ShortenHandler(store))
 		api.GET("/stats/:code", stats.StatsHandler(store))
 	}
 

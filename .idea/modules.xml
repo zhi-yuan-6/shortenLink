@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/short_link_generation.iml" filepath="$PROJECT_DIR$/.idea/short_link_generation.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/shortenLInk.iml" filepath="$PROJECT_DIR$/.idea/shortenLInk.iml" />
     </modules>
   </component>
 </project>

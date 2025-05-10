@@ -3,8 +3,8 @@ package stats
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"short_link_generation/storage"
-	"short_link_generation/utils"
+	"shortenLink/storage"
+	"shortenLink/utils"
 	"sync/atomic"
 	"time"
 )

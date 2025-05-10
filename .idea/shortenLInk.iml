@@ -2,7 +2,11 @@
 <module type="WEB_MODULE" version="4">
   <component name="Go" enabled="true" />
   <component name="NewModuleRootManager">
-    <content url="file://$MODULE_DIR$" />
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/文档/开发" />
+      <excludeFolder url="file://$MODULE_DIR$/文档/技术" />
+      <excludeFolder url="file://$MODULE_DIR$/文档/用户" />
+    </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>

@@ -2,7 +2,7 @@ package utils
 
 import (
 	"hash/crc32"
-	"short_link_generation/storage"
+	"shortenLink/storage"
 	"strings"
 )
 

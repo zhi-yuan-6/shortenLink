@@ -1,12 +1,16 @@
-package shortLink
+package shorten
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"io"
 	"math/rand"
 	"net/http"
+	"net/http/httptest"
+	"shortenLink/storage"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -31,13 +35,12 @@ func TestShortenHandler(t *testing.T) {
 	//创建一个信号量来控制并发数 执行一次sendRequest函数，就会占用一个通道
 	sem := make(chan struct{}, concurrency)
 
-	//设置一个伪随机数
-	source := rand.NewSource(time.Now().UnixNano())
-	r := rand.New(source)
 	// 发送请求函数
 	sendRequest := func() {
 		//准备 JSON 数据
 		//生成一个伪随机数
+		source := rand.NewSource(time.Now().UnixNano()) //若使用全局随机数生成器，需要加锁
+		r := rand.New(source)
 		randNumber := r.Intn(100000)
 		data := ShortenRequest{URL: "https://test" + fmt.Sprintf("%d", randNumber) + ".com"}
 		jsonData, err := json.Marshal(data)
@@ -80,4 +83,45 @@ func TestShortenHandler(t *testing.T) {
 		t.Errorf("请求失败错误数: %d", errors)
 	}
 
+}
+
+func TestShortenHandler2(t *testing.T) {
+	store := storage.NewMemoryStore()
+	engine := gin.Default()
+	engine.POST("/api/shorten", ShortenHandler(store))
+	//测试用例矩阵
+	tests := []struct {
+		name       string
+		payload    string
+		wantStatus int
+		wantKey    string
+	}{
+		{"valid_url", `{"url": "http://google.com"}`, 200, "short_link"},
+		{"invalid__json", `{invalid}`, 400, "error"},
+		{"empty_url", `{"url":""}`, 400, "error"},
+		//{"non_http_url", `{"url":"ftp://example.com"}`, 400, "error"},  //暂时未添加url检验
+	}
+
+	for _, tt := range tests {
+		//发起请求
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			req := httptest.NewRequest("POST", "/api/shorten", strings.NewReader(tt.payload))
+			req.Header.Set("Content-Type", "application/json")
+			engine.ServeHTTP(w, req)
+			//检查响应状态码
+			if w.Code != tt.wantStatus {
+				t.Errorf("状态码错误 ，期望%d 实际%d", tt.wantStatus, w.Code)
+			}
+			//检查响应数据
+			var resp map[string]interface{}
+			if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+				t.Fatal("响应数据解析失败：", err)
+			}
+
+			if _, ok := resp[tt.wantKey]; !ok {
+				t.Errorf("响应数据中缺少%s字段", tt.wantKey)
+			}
+		})
+	}
 }

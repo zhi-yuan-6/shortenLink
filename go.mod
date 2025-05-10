@@ -1,4 +1,4 @@
-module short_link_generation
+module shortenLink
 
 go 1.23.4
 

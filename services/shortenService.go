@@ -1,8 +1,8 @@
 package services
 
 import (
-	"short_link_generation/storage"
-	"short_link_generation/utils"
+	"shortenLink/storage"
+	"shortenLink/utils"
 	"time"
 )
 

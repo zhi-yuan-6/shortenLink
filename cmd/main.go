@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"short_link_generation/routers"
-	"short_link_generation/storage"
+	"shortenLink/routers"
+	"shortenLink/storage"
 )
 
 func main() {
