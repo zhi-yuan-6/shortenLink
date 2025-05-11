@@ -1,0 +1,16 @@
+postgres:
+  host: localhost
+  port: 5432
+  user: postgres
+  password: 123456
+  dbname: shortLink_pord
+  max_open_conns: 50 #按照（核心数*2）+有效磁盘数估算 注：待修改
+  max_idle_cons: 25 #建议设置为max_open_conns的50%
+  max_idle_time: 30 #连接最大空闲时间，单位秒
+  ssl_mode: disable #ssl模式
+  auto_migrate: true #是否自动迁移
+
+redis:
+  addr: "localhost:6379"
+  password: ""
+  db: 0

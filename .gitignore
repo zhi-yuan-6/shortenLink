@@ -1,5 +1,6 @@
 #忽略测试文件
 *_test.go
-
+testutils/
 .idea
 文档/
+migrations
