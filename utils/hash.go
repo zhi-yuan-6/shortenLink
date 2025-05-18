@@ -2,7 +2,6 @@ package utils
 
 import (
 	"hash/crc32"
-	"shortenLink/storage"
 	"strings"
 )
 
@@ -25,11 +24,16 @@ func GenerateShortCode(url string) string {
 }
 
 // 冲突检测函数
-func IsCollection(store *storage.MemoryStore, code string) bool {
-	store.Mu.RLock()
+func IsCollection(code string) bool {
+	/*store.Mu.RLock()
 	defer store.Mu.RUnlock()
-	_, exists := store.UrlMap[code]
-	return exists
+	_, exists := store.UrlMap[code]*/
+	//_, err := models.GetOriginalURL(code) //需修改为三级查询
+	_, err := GetOriginalURL(code)
+	if err != nil {
+		return false //不冲突
+	}
+	return true // 冲突
 }
 
 // 验证是否是合法的短码

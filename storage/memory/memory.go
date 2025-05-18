@@ -1,5 +1,6 @@
-package storage
+package memory
 
+/*
 import (
 	"sync"
 	"sync/atomic"
@@ -36,14 +37,15 @@ func (m *MemoryStore) IncrementVisit(code string) {
 	if _, exists := m.VisitCount[code]; !exists {
 		m.VisitCount[code] = 0
 	}
-	m.VisitCount[code]++*/
-	//原子操作更新计数器
-	record, _ := m.Visits.LoadOrStore(code, &VisitRecord{})
-	//安全类型断言
-	vRecord, ok := record.(*VisitRecord)
-	if !ok {
-		panic("unexpected type in visits map")
-	}
-	atomic.AddInt64(&vRecord.Count, 1)
-	atomic.StoreInt64(&vRecord.LastVisit, time.Now().UnixNano())
+		m.VisitCount[code]++*/
+/*//原子操作更新计数器
+record, _ := m.Visits.LoadOrStore(code, &VisitRecord{})
+//安全类型断言
+vRecord, ok := record.(*VisitRecord)
+if !ok {
+	panic("unexpected type in visits map")
 }
+atomic.AddInt64(&vRecord.Count, 1)
+atomic.StoreInt64(&vRecord.LastVisit, time.Now().UnixNano())*/
+//}
+//*/

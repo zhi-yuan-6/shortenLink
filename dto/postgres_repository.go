@@ -1,6 +1,7 @@
-package storage
+package dto
 
-import (
+//开发环境下使用偶的sqlx.DB进行操作
+/*import (
 	"context"
 	"github.com/jmoiron/sqlx"
 	"shortenLink/models"
@@ -10,7 +11,7 @@ type PostgresRepository struct {
 	db *sqlx.DB
 }
 
-// pkg/storage/postgres_repository.go
+// 待实现具体操作
 func (r *PostgresRepository) CreateShortURL(ctx context.Context, su *models.ShortUrl) error {
 	const query = `
         INSERT INTO short_urls
@@ -70,3 +71,4 @@ func (r *PostgresRepository) UpdateStats(code string) error {
             last_visit = NOW()
     `, code)
 }
+*/

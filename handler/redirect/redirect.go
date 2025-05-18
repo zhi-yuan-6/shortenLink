@@ -3,35 +3,46 @@ package redirect
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"shortenLink/storage"
+	"shortenLink/models"
 	"shortenLink/utils"
+	"sync"
 )
 
-func RedirectHandler(store *storage.MemoryStore) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		//获取参数
-		code := c.Param("code")
-		if !utils.IsValidCode(code) {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid short code"})
-			return
-		}
+var codeLocks = &sync.Map{}
 
-		//获取短码对应的长链接
-		store.Mu.RLock()
-		originalURL, exists := store.UrlMap[code]
-		store.Mu.RUnlock()
-
-		if !exists {
-			c.AbortWithStatus(http.StatusNotFound)
-			return
-		}
-
-		//原子操作递增计数器
-		store.IncrementVisit(code)
-
-		c.JSON(http.StatusFound, gin.H{
-			"original_url": originalURL,
-		})
-		//c.Redirect(http.StatusFound, originalURL)
+func RedirectHandler(c *gin.Context) {
+	//获取参数
+	code := c.Param("code")
+	if !utils.IsValidCode(code) {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid short code"})
+		return
 	}
+
+	//获取短码对应的长链接
+	/*//store.Mu.RLock()
+	//originalURL, exists := store.UrlMap[code]
+	//store.Mu.RUnlock()*/
+	//调用service
+	originalURL, err := utils.GetOriginalURL(code)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "short code not found"})
+		return
+	}
+
+	//原子操作递增计数器(已经改为在查询时递增)
+	//store.IncrementVisit(code)
+	lock, _ := codeLocks.LoadOrStore(code, &sync.Mutex{})
+	mu := lock.(*sync.Mutex)
+	mu.Lock()
+	defer mu.Unlock()
+	err = models.IncrementVisit(code)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error:": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusFound, gin.H{
+		"original_url": originalURL,
+	})
+	//c.Redirect(http.StatusFound, originalURL)
 }

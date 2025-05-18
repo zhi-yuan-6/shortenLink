@@ -1,31 +1,92 @@
 package services
 
 import (
-	"shortenLink/storage"
+	"fmt"
+	"gorm.io/gorm"
+	"shortenLink/dto"
+	"shortenLink/models"
 	"shortenLink/utils"
+	"sync"
 	"time"
 )
 
-func Shorten(url string, store *storage.MemoryStore) string {
-	var code string
-	for i := 0; i < 3; i++ { //最多尝试三次
-		code = utils.GenerateShortCode(url)
-		if !utils.IsCollection(store, code) {
-			break
-		}
-		//处理冲突：追加随机字符 time.Now().UnixNano():获取当前时间的纳秒级时间戳，返回值是一个整数，使用计算出的索引从 utils.Base62Chars 字符串中获取一个字符。
-		code += string(utils.Base62Chars[time.Now().UnixNano()%62])
-		if !utils.IsCollection(store, code) {
+var urlLocks = &sync.Map{}
+
+func Shorten(url string) (string, error) {
+	//获取当前URL对应的锁
+	lock, _ := urlLocks.LoadOrStore(url, &sync.Mutex{})
+	mu := lock.(*sync.Mutex)
+	mu.Lock()
+	defer mu.Unlock()
+	//幂等性检查
+	/*store.Mu.RLock()
+	if code, exists := store.ReverseMap[req.URL]; exists {
+		store.Mu.RUnlock()
+		c.JSON(http.StatusOK, gin.H{
+			"short_link": buildShortURL(c, code),
+		})
+		return
+	}
+	store.Mu.RUnlock()*/
+	code, err := models.GetShortenCode(url) //需修改为本地，redis，数据库三级查询
+	if err == nil {
+		return code, nil
+	}
+	if err != gorm.ErrRecordNotFound {
+		return "", err
+	}
+
+	for i := 0; i < 3; i++ {
+		//最多尝试三次
+		salt := time.Now().UnixNano()
+		code = utils.GenerateShortCode(fmt.Sprintf("%s,%d", url, salt))
+		conflict := utils.IsCollection(code)
+		if !conflict { //没冲突
 			break
 		}
 	}
 
 	//存储短链接
-	store.Mu.Lock()
+	/*store.Mu.Lock()
 	store.UrlMap[code] = url
 	store.ReverseMap[url] = code
 	store.CreatedTime[code] = time.Now()
-	store.Mu.Unlock()
+	store.Mu.Unlock()*/
+	//开启事务
+	tx := dto.DB.Begin()
+	defer func() { //回滚
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+	expiresAt := time.Now().Add(24 * time.Hour)
+	shortCode := models.ShortUrl{
+		ShortCode:   code,
+		OriginalUrl: url,
+		ExpiresAt:   &expiresAt,
+	}
+	if err := tx.Create(&shortCode).Error; err != nil {
+		tx.Rollback()
+		return "", err
+	}
 
-	return code
+	if err := tx.Create(&models.VisitStats{ShortCode: code}).Error; err != nil {
+		tx.Rollback()
+		return "", err
+	}
+
+	//提交事务
+	if err := tx.Commit().Error; err != nil {
+		return "", err
+	}
+	/*err = shortCode.CreateShortenUrl()
+	if err != nil {
+		return "", err
+	}
+	//创建visit记录
+	err = models.CreateVisitStats(code)
+	if err != nil {
+		return "", err
+	}*/
+	return code, nil
 }

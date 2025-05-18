@@ -8,6 +8,8 @@
       <excludeFolder url="file://$MODULE_DIR$/文档/用户" />
       <excludeFolder url="file://$MODULE_DIR$/testutils" />
       <excludeFolder url="file://$MODULE_DIR$/文档" />
+      <excludeFolder url="file://$MODULE_DIR$/.idea/dataSources" />
+      <excludeFolder url="file://$MODULE_DIR$/migrations" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

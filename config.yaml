@@ -8,9 +8,15 @@ postgres:
   max_idle_cons: 25 #建议设置为max_open_conns的50%
   max_idle_time: 30 #连接最大空闲时间，单位秒
   ssl_mode: disable #ssl模式
-  auto_migrate: true #是否自动迁移
+  auto_migrate: false #是否自动迁移
 
 redis:
   addr: "localhost:6379"
   password: ""
   db: 0
+  pool_size: 100 # 缓存池  注：待修改
+  min_idle_conns: 20 #最小空闲连接数
+  max_retries: 3 #最大重试次数
+  dial_timeout: "1s" #连接超时时间
+  read_timeout: "500ms" #读取超时时间
+  write_timeout: "500ms" #写入超时时间

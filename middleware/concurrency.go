@@ -9,7 +9,7 @@ type ConcurrencyLimiter struct {
 	sem chan struct{}
 }
 
-// NewConcurrencyLimiter 创建一个新的 ConcurrencyLimiter 实例。
+// NewConcurrencyLimiter 创建一个新的 ConcurrencyLimiter 实例。 注：带学习
 func NewConcurrencyLimiter(max int) *ConcurrencyLimiter {
 	return &ConcurrencyLimiter{
 		sem: make(chan struct{}, max),

@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"github.com/spf13/viper"
 	"path/filepath"
 	"runtime"
@@ -11,8 +10,10 @@ import (
 
 type Config struct {
 	Postgres PostgresConfig `mapstructure:"postgres"`
-	//Redis    RedisConfig    `mapstructure:"redis"`
+	Redis    RedisConfig    `mapstructure:"redis"`
 }
+
+var Cfg *Config
 
 type PostgresConfig struct {
 	Host         string        `mapstructure:"host"`
@@ -27,7 +28,18 @@ type PostgresConfig struct {
 	AutoMigrate  bool          `mapstructure:"auto_migrate"` // 新增自动迁移配置
 }
 
-func LoadConfig(configPath string) (*Config, error) {
+type RedisConfig struct {
+	Addr         string        `mapstructure:"addr"`
+	Password     string        `mapstructure:"password"`
+	DB           int           `mapstructure:"db"`
+	PoolSize     int           `mapstructure:"pool_size"`
+	MinIdleConns int           `mapstructure:"min_idle_conns"`
+	DialTimeout  time.Duration `mapstructure:"dial_timeout"`
+	ReadTimeout  time.Duration `mapstructure:"read_timeout"`
+	WriteTimeout time.Duration `mapstructure:"write_timeout"`
+}
+
+func LoadConfig(configPath string) error {
 	if configPath == "" {
 		_, filename, _, _ := runtime.Caller(0) // 获取当前文件的路径
 		configPath = filepath.Join(filepath.Dir(filename), "../config.yaml")
@@ -42,33 +54,17 @@ func LoadConfig(configPath string) (*Config, error) {
 	viper.BindEnv("database.postgres.password")
 
 	if err := viper.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("failed to read config file: %w", err)
+		return fmt.Errorf("failed to read config file: %w", err)
 	}
 
-	var cfg Config
-	if err := viper.Unmarshal(&cfg); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+	if err := viper.Unmarshal(&Cfg); err != nil {
+		return fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 
-	return &cfg, nil
+	return nil
 }
 
-func NewPostgres(p PostgresConfig) (*sqlx.DB, error) {
-	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", p.Host, p.Port, p.User, p.Password, p.DBName)
-
-	db, err := sqlx.Connect("postgres", connStr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to postgres: %w", err)
-	}
-
-	//连接池配置
-	db.SetMaxOpenConns(p.MaxOpenConns)
-	db.SetMaxIdleConns(p.MaxIdleConns)
-	db.SetConnMaxIdleTime(p.MaxIdleTime)
-
-	//测试连接
-	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("failed to ping postgres: %w", err)
-	}
-	return db, nil
+func (pg *PostgresConfig) DSN() string {
+	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+		pg.Host, pg.Port, pg.User, pg.Password, pg.DBName, pg.SSLMode)
 }

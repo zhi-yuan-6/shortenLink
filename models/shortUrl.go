@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"shortenLink/dto"
+	"time"
+)
 
 type ShortUrl struct {
 	ID          string    `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
@@ -15,3 +18,28 @@ type ShortUrl struct {
 func (ShortUrl) TableName() string {
 	return "short_urls"
 }
+
+func (model *ShortUrl) CreateShortenUrl() error {
+	return dto.DB.Create(model).Error
+}
+
+func GetShortenCode(url string) (string, error) {
+	var shortUrl ShortUrl
+	err := dto.DB.Where("original_url=?", url).First(&shortUrl).Error
+	return shortUrl.ShortCode, err
+}
+
+func GetOriginalURL(code string) (string, error) {
+	var shortURL ShortUrl
+	err := dto.DB.Where("short_code=?", code).First(&shortURL).Error
+	if err != nil {
+		return "", err
+	}
+	return shortURL.OriginalUrl, nil
+}
+
+/*// 删除
+func DeleteShortenURL(url string) error {
+	err := storage.DB.Where("original_url=?", url).Error
+	return err
+}*/
